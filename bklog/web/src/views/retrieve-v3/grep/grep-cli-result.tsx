@@ -29,9 +29,9 @@ import useIntersectionObserver from '@/hooks/use-intersection-observer';
 import useLocale from '@/hooks/use-locale';
 
 import RetrieveHelper from '../../retrieve-helper';
-import ScrollTop from '../../retrieve-v2/components/scroll-top/index';
-import TextSegmentation from '../../retrieve-v2/components/text-segmentation/index';
-import useTextAction from '../../retrieve-v2/hooks/use-text-action';
+// import ScrollTop from '../../retrieve-v2/components/scroll-top/index';
+// import TextSegmentation from '../../retrieve-v2/components/text-segmentation/index';
+// import useTextAction from '../../retrieve-v2/hooks/use-text-action';
 import { GrepRequestResult } from './types';
 
 import './grep-cli-result.scss';
