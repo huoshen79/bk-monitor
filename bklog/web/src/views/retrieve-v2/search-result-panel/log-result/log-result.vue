@@ -25,28 +25,33 @@
 -->
 <template>
   <div class="bklog-result-box">
-    <LogRows
-      :content-type="contentType"
-      :handle-click-tools="handleClickTools"
-    ></LogRows>
-    <RealTimeLog
-      :is-show="isShowRealTimeLog"
-      :log-params="logDialog.data"
-      :retrieve-params="retrieveParams"
-      :target-fields="targetFields"
-      :indexSetId="logDialog.indexSetId"
-      :row-index="currentIndex"
-      @close-dialog="hideDialog"
-    />
-    <ContextLog
-      :is-show="isShowContextLog"
-      :log-params="logDialog.data"
-      :retrieve-params="retrieveParams"
-      :target-fields="targetFields"
-      :indexSetId="logDialog.indexSetId"
-      :row-index="currentIndex"
-      @close-dialog="hideDialog"
-    />
+    <template v-if="isSearchResultLoading">
+      <clustering-loader :width-list="loadingWidthList.global" is-loading />
+    </template>
+    <template v-else>
+      <LogRows
+        :content-type="contentType"
+        :handle-click-tools="handleClickTools"
+      ></LogRows>
+      <RealTimeLog
+        :is-show="isShowRealTimeLog"
+        :log-params="logDialog.data"
+        :retrieve-params="retrieveParams"
+        :target-fields="targetFields"
+        :indexSetId="logDialog.indexSetId"
+        :row-index="currentIndex"
+        @close-dialog="hideDialog"
+      />
+      <ContextLog
+        :is-show="isShowContextLog"
+        :log-params="logDialog.data"
+        :retrieve-params="retrieveParams"
+        :target-fields="targetFields"
+        :indexSetId="logDialog.indexSetId"
+        :row-index="currentIndex"
+        @close-dialog="hideDialog"
+      />
+    </template>
     <!-- <AiAssitant ref="refAiAssitant" @close="handleAiClose"></AiAssitant> -->
   </div>
 </template>
@@ -59,12 +64,15 @@ import ContextLog from "@/views/retrieve-v3/search-result/original-log/context-l
 import RealTimeLog from "@/views/retrieve-v3/search-result/original-log/real-time-log";
 import LogRows from "./log-rows.tsx";
 import RetrieveHelper from "@/views/retrieve-helper";
+import ClusteringLoader from "@/skeleton/clustering-loader.vue";
+import { mapState } from "vuex";
 export default {
   components: {
     RetrieveLoader,
     ContextLog,
     RealTimeLog,
     LogRows,
+    ClusteringLoader,
   },
   props: {
     contentType: {
@@ -78,6 +86,12 @@ export default {
   },
   data() {
     return {
+      loadingWidthList: {
+        // loading表头宽度列表
+        global: [""],
+        notCompared: [150, 90, 90, ""],
+        compared: [150, 90, 90, 100, 100, ""],
+      },
       targetFields: [],
       isShowRealTimeLog: false,
       isShowContextLog: false,
@@ -90,6 +104,9 @@ export default {
     };
   },
   computed: {
+    ...mapState({
+      isSearchResultLoading: (state) => state.indexSetQueryResult.is_loading,
+    }),
     isExternal() {
       return !this.$store.getters.isAiAssistantActive;
     },
@@ -150,20 +167,20 @@ export default {
         });
     },
     handleClickTools(event, row, config, index) {
-      if (event === 'ai') {
+      if (event === "ai") {
         RetrieveHelper.aiAssitantHelper.openAiAssitant(true, {
-            space_uid: this.$store.getters.spaceUid,
-            index_set_id: this.$store.getters.indexId,
-            log: row,
-            index,
-          });
-          return;
-        }
+          space_uid: this.$store.getters.spaceUid,
+          index_set_id: this.$store.getters.indexId,
+          log: row,
+          index,
+        });
+        return;
+      }
 
-        if (event === 'add-to-ai') {
-          RetrieveHelper.aiAssitantHelper.setCiteText(row);
-          return;
-        }
+      if (event === "add-to-ai") {
+        RetrieveHelper.aiAssitantHelper.setCiteText(row);
+        return;
+      }
       if (["realTimeLog", "contextLog"].includes(event)) {
         this.currentIndex = index - 1;
         const contextFields = config.contextAndRealtime.extra?.context_fields;
@@ -204,8 +221,7 @@ export default {
         }
         this.openLogDialog(dialogNewParams, event, row.__index_set_id__);
       } else if (event === "webConsole") this.openWebConsole(row);
-      else if (event === "logSource")
-        this.$store.dispatch("changeShowUnionSource");
+      else if (event === "logSource") this.$store.dispatch("changeShowUnionSource");
     },
     // 关闭实时日志或上下文弹窗后的回调
     hideDialog() {
